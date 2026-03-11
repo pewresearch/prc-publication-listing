@@ -126,21 +126,38 @@ class Query {
 			$post_visibility = array( 'hidden-on-search' );
 		}
 
-		// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-		$query_args['tax_query'] = array_merge(
-			$query_args['tax_query'] ?? array(),
-			array(
+		$existing_tax_query  = $query_args['tax_query'] ?? array();
+		$has_visibility      = false;
+		foreach ( $existing_tax_query as $clause ) {
+			if ( ! is_array( $clause ) ) {
+				continue;
+			}
+			if (
+				( isset( $clause['taxonomy'] ) && '_post_visibility' === $clause['taxonomy'] ) ||
+				( isset( $clause[0]['taxonomy'] ) && '_post_visibility' === $clause[0]['taxonomy'] )
+			) {
+				$has_visibility = true;
+				break;
+			}
+		}
+
+		if ( ! $has_visibility ) {
+			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			$query_args['tax_query'] = array_merge(
+				$existing_tax_query,
 				array(
-					'relation' => 'OR',
 					array(
-						'taxonomy' => '_post_visibility',
-						'field'    => 'slug',
-						'terms'    => $post_visibility,
-						'operator' => 'NOT IN',
+						'relation' => 'OR',
+						array(
+							'taxonomy' => '_post_visibility',
+							'field'    => 'slug',
+							'terms'    => $post_visibility,
+							'operator' => 'NOT IN',
+						),
 					),
-				),
-			)
-		);
+				)
+			);
+		}
 
 		// Enforce only published posts, this also helps enhance query performance.
 		$query_args['post_status'] = 'publish';
@@ -218,6 +235,11 @@ class Query {
 			return;
 		}
 
+		// Sitemap requests resolve to is_home() but should not run pub listing logic.
+		if ( get_query_var( 'sitemap' ) || get_query_var( 'sitemap-type' ) ) {
+			return;
+		}
+
 		// Specific conditions that we do not want to modify the query and want to bail early.
 		$taxonomies_to_exclude = $query->is_tax(
 			array(
@@ -287,6 +309,8 @@ class Query {
 	 * @return mixed
 	 */
 	public function hook_pub_listing_args_into__core_query( $pre_render, $parsed_block, $parent_block ) {
+		static $filter_added = false;
+
 		if ( 'core/query' !== $parsed_block['blockName'] ) {
 			return $pre_render;
 		}
@@ -302,6 +326,11 @@ class Query {
 		if ( 'prc-block/pub-listing-query' !== $attributes['namespace'] ) {
 			return $pre_render;
 		}
+
+		if ( $filter_added ) {
+			return $pre_render;
+		}
+		$filter_added = true;
 
 		add_filter(
 			'query_loop_block_query_vars',
