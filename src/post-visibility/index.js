@@ -1,8 +1,7 @@
 /**
  * WordPress Dependencies
  */
-import { FormToggle, BaseControl } from '@wordpress/components';
-import { useEffect, useState } from '@wordpress/element';
+import { FormToggle } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useEntityProp } from '@wordpress/core-data';
 import { registerPlugin } from '@wordpress/plugins';
@@ -10,8 +9,6 @@ import { PluginPostStatusInfo } from '@wordpress/editor';
 
 function PRCPostVisibility() {
 	const { editPost } = useDispatch('core/editor');
-	const [isHiddenOnIndex, setIsHiddenOnIndex] = useState(false);
-	const [isHiddenOnSearch, setIsHiddenOnSearch] = useState(false);
 
 	const {
 		selectedPostVisibilityTerms,
@@ -22,26 +19,35 @@ function PRCPostVisibility() {
 		const _selectedPostVisibilityTermIds =
 			select('core/editor').getEditedPostAttribute('_post_visibility') ??
 			[];
-		const postVisibilityTerms =
-			select('core').getEntityRecords('taxonomy', '_post_visibility') ??
-			[];
+		const postVisibilityTerms = select('core').getEntityRecords(
+			'taxonomy',
+			'_post_visibility'
+		);
 
 		// Find the term IDs for our visibility terms
-		const hiddenOnIndexTerm = postVisibilityTerms.find(
+		const hiddenOnIndexTerm = postVisibilityTerms?.find(
 			(term) => term.slug === 'hidden-on-index'
 		);
-		const hiddenOnSearchTerm = postVisibilityTerms.find(
+		const hiddenOnSearchTerm = postVisibilityTerms?.find(
 			(term) => term.slug === 'hidden-on-search'
 		);
 
 		return {
-			postVisibilityTerms,
 			selectedPostVisibilityTerms: _selectedPostVisibilityTermIds,
 			hiddenOnIndexTermId: hiddenOnIndexTerm?.id,
 			hiddenOnSearchTermId: hiddenOnSearchTerm?.id,
 			postType: select('core/editor').getCurrentPostType(),
 		};
 	}, []);
+
+	const isHiddenOnIndex =
+		hiddenOnIndexTermId !== null &&
+		hiddenOnIndexTermId !== undefined &&
+		(selectedPostVisibilityTerms ?? []).includes(hiddenOnIndexTermId);
+	const isHiddenOnSearch =
+		hiddenOnSearchTermId !== null &&
+		hiddenOnSearchTermId !== undefined &&
+		(selectedPostVisibilityTerms ?? []).includes(hiddenOnSearchTermId);
 
 	const [seoData, setSeoData] = useEntityProp(
 		'postType',
@@ -51,23 +57,8 @@ function PRCPostVisibility() {
 	// Check if seoData has data... and if so set const hasSEOData to true...
 	const hasSEOData = seoData && Object.keys(seoData).length > 0;
 
-	// Update local state when selected terms change
-	useEffect(() => {
-		if (selectedPostVisibilityTerms) {
-			setIsHiddenOnIndex(
-				selectedPostVisibilityTerms.includes(hiddenOnIndexTermId)
-			);
-			setIsHiddenOnSearch(
-				selectedPostVisibilityTerms.includes(hiddenOnSearchTermId)
-			);
-		}
-	}, [
-		selectedPostVisibilityTerms,
-		hiddenOnIndexTermId,
-		hiddenOnSearchTermId,
-	]);
-
 	const handleVisibilityToggle = (termId, isChecked) => {
+		if (termId === null || termId === undefined) return;
 		let newTerms = [...(selectedPostVisibilityTerms || [])];
 
 		if (isChecked) {

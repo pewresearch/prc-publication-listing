@@ -82,7 +82,7 @@ class Query {
 	/**
 	 * Register URL query var to show child posts in a publication listing query.
 	 *
-	 * @hook prc_platform_rewrite_query_vars
+	 * @hook query_vars
 	 *
 	 * @param mixed $query_vars The query vars.
 	 * @return mixed
@@ -126,8 +126,8 @@ class Query {
 			$post_visibility = array( 'hidden-on-search' );
 		}
 
-		$existing_tax_query  = $query_args['tax_query'] ?? array();
-		$has_visibility      = false;
+		$existing_tax_query = $query_args['tax_query'] ?? array();
+		$has_visibility     = false;
 		foreach ( $existing_tax_query as $clause ) {
 			if ( ! is_array( $clause ) ) {
 				continue;
@@ -189,6 +189,38 @@ class Query {
 	}
 
 	/**
+	 * Include all publication-listing-enabled post types in the main RSS/Atom feed.
+	 *
+	 * @hook pre_get_posts
+	 *
+	 * @param \WP_Query $query The query object.
+	 * @return void
+	 */
+	public function include_in_main_feed( $query ) {
+		if ( ! $query->is_feed() || $query->is_comment_feed() ) {
+			return;
+		}
+		if ( ! $query->is_main_query() ) {
+			return;
+		}
+
+		$enabled = self::get_enabled_post_types();
+		if ( empty( $enabled ) ) {
+			return;
+		}
+
+		$current = (array) $query->get( 'post_type' );
+		if ( empty( $current ) ) {
+			$current = array( 'post' );
+		}
+
+		$query->set(
+			'post_type',
+			array_values( array_unique( array_merge( $current, $enabled ) ) )
+		);
+	}
+
+	/**
 	 * Register post visibility taxonomy.
 	 */
 	public function register_post_visibility_taxonomy() {
@@ -200,7 +232,7 @@ class Query {
 				'publicly_queryable' => true,
 				'label'              => 'Post Visibility',
 				'hierarchical'       => true,
-				'show_ui'            => true,
+				'show_ui'            => false,
 				'show_in_menu'       => true,
 				'show_in_nav_menus'  => false,
 				'show_admin_column'  => true,
@@ -335,12 +367,11 @@ class Query {
 		add_filter(
 			'query_loop_block_query_vars',
 			function ( $query, $block ) {
-				$query_args = $block->context['query'] ?? array();
-				$query_args = self::get_filtered_query_args( $query_args, $query );
-				return array_merge(
-					$query,
-					$query_args
-				);
+				$block_query = $block->context['query'] ?? array();
+				if ( empty( $block_query['isPubListingQuery'] ) ) {
+					return $query;
+				}
+				return self::get_filtered_query_args( $query, null );
 			},
 			999,
 			2

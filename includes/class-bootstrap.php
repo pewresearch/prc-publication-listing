@@ -75,6 +75,7 @@ class Bootstrap {
 
 		// Load files...
 		require_once plugin_dir_path( __DIR__ ) . '/includes/class-query.php';
+		require_once plugin_dir_path( __DIR__ ) . '/includes/class-archive-redirects.php';
 	}
 
 	/**
@@ -83,7 +84,7 @@ class Bootstrap {
 	public function register_assets() {
 		$post_visibility_asset_file = include PRC_PUBLICATION_LISTING_DIR . '/build/post-visibility/index.asset.php';
 		$core_query_asset_file      = include PRC_PUBLICATION_LISTING_DIR . '/build/core-query/index.asset.php';
-		
+
 		$asset_slug = 'prc-platform-publication-listing__';
 
 		$script = wp_register_script(
@@ -145,13 +146,17 @@ class Bootstrap {
 		$this->loader->add_action( 'pre_get_posts', $query, 'init_pub_listing__wp_query', 1, 1 );
 		$this->loader->add_filter( 'block_type_metadata_settings', $query, 'default_tax_query_to_or', 100, 2 );
 		$this->loader->add_filter( 'block_type_metadata_settings', $query, 'update_context', 100, 2 );
-		$this->loader->add_filter( 'prc_platform_rewrite_query_vars', $query, 'register_query_var', 100, 1 );
+		$this->loader->add_filter( 'query_vars', $query, 'register_query_var', 100, 1 );
 
 		// Hook into various queries.
+		$this->loader->add_action( 'pre_get_posts', $query, 'include_in_main_feed', 11, 1 );
 		$this->loader->add_action( 'pre_get_posts', $query, 'hook_pub_listing_args_into__wp_query', 11, 1 );
 		$this->loader->add_filter( 'pre_render_block', $query, 'hook_pub_listing_args_into__core_query', 11, 3 );
 		$this->loader->add_filter( 'rest_post_query', $query, 'hook_pub_listing_args_into__rest_query', 11, 2 );
 		$this->loader->add_action( 'enqueue_block_editor_assets', $this, 'enqueue_assets', 11, 1 );
+
+		$archive_redirects = new Archive_Redirects();
+		$this->loader->add_action( 'template_redirect', $archive_redirects, 'redirect_years_archive' );
 	}
 
 	/**

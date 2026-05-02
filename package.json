@@ -4,16 +4,10 @@
 	"description": "Publication Listing query handler and post visibility controls for PRC Platform",
 	"license": "GPL-2.0-or-later",
 	"devDependencies": {
-		"@playwright/test": "^1.51.1",
-		"@wordpress/e2e-test-utils-playwright": "^1.22.0",
-		"@wordpress/env": "^10.22.0",
-		"@wordpress/scripts": "^30.15.0"
+		"@wordpress/scripts": "^31.4.0"
 	},
 	"scripts": {
 		"build": "wp-scripts build",
-		"start": "wp-scripts start",
-		"test": "wp-scripts test-playwright",
-		"test:env:start": "wp-env start",
-		"test:env:stop": "wp-env stop"
+		"start": "wp-scripts start"
 	}
 }

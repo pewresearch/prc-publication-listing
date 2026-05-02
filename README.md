@@ -72,9 +72,21 @@ prc-publication-listing/
                                    │
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
+│ include_in_main_feed() [pre_get_posts, priority 11]                  │
+│ • On main site feed (not comment feed): merges Query::get_enabled_  │
+│   post_types() into the query so all prc-publication-listing types  │
+│   appear in the main RSS/Atom feed                                   │
+└─────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────┐
 │                    Query Executes with Modifications                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Main RSS / Atom feed
+
+The same post types that declare `prc-publication-listing` support are merged into the **main** feed query via `Query::include_in_main_feed()` (`pre_get_posts`, priority 11). Plugins do not need a separate feed filter—`add_post_type_support( 'my-type', 'prc-publication-listing' )` is enough for inclusion in publication listings and in the main feed.
 
 ## Requirements
 
@@ -474,8 +486,8 @@ npm run start -w @prc/publication-listing
 # Build for production
 npm run build -w @prc/publication-listing
 
-# Run tests (requires playground)
-npm run playground:start && npm run test -w @prc/publication-listing
+# Run tests (from monorepo root; wp-env, Playground, and Playwright are centralized)
+npm run env:start && npm test -- tests/prc-publication-listing/
 
 # Lint PHP
 composer phpcs -- plugins/prc-publication-listing

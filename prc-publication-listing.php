@@ -19,7 +19,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       prc-publication-listing
- * Requires Plugins:  prc-platform-core
+ * Requires Plugins:  prc-scripts
  */
 
 namespace PRC\Platform\Publication_Listing;
@@ -30,6 +30,13 @@ if ( ! defined( 'WPINC' ) ) {
 }
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+if ( ! defined( 'PRC_PRIMARY_SITE_ID' ) ) {
+	define( 'PRC_PRIMARY_SITE_ID', 1 );
+}
+if ( ! defined( 'DEFAULT_TECHNICAL_CONTACT' ) ) {
+	define( 'DEFAULT_TECHNICAL_CONTACT', 'webdev@pewresearch.org' );
 }
 
 define( 'PRC_PUBLICATION_LISTING_FILE', __FILE__ );
