@@ -232,7 +232,7 @@ class Query {
 				'publicly_queryable' => true,
 				'label'              => 'Post Visibility',
 				'hierarchical'       => true,
-				'show_ui'            => false,
+				'show_ui'            => true,
 				'show_in_menu'       => true,
 				'show_in_nav_menus'  => false,
 				'show_admin_column'  => true,
