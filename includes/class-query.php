@@ -189,6 +189,27 @@ class Query {
 	}
 
 	/**
+	 * Whether the query is the global site feed at /feed/ (not archive, singular, search, or custom add_feed slugs).
+	 *
+	 * @param \WP_Query $query The query object.
+	 * @return bool
+	 */
+	public static function is_default_site_feed( $query ): bool {
+		if ( $query->is_archive() || $query->is_search() || $query->is_singular() ) {
+			return false;
+		}
+
+		$feed_slug               = $query->get( 'feed' );
+		$default_site_feed_slugs = array( '', 'feed', 'rss', 'rss2', 'atom', 'rdf' );
+
+		if ( is_string( $feed_slug ) && ! in_array( $feed_slug, $default_site_feed_slugs, true ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Include all publication-listing-enabled post types in the main RSS/Atom feed.
 	 *
 	 * @hook pre_get_posts
@@ -201,6 +222,9 @@ class Query {
 			return;
 		}
 		if ( ! $query->is_main_query() ) {
+			return;
+		}
+		if ( ! self::is_default_site_feed( $query ) ) {
 			return;
 		}
 

@@ -73,9 +73,9 @@ prc-publication-listing/
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │ include_in_main_feed() [pre_get_posts, priority 11]                  │
-│ • On main site feed (not comment feed): merges Query::get_enabled_  │
-│   post_types() into the query so all prc-publication-listing types  │
-│   appear in the main RSS/Atom feed                                   │
+│ • On the global site feed at /feed/ only (not comment, archive,    │
+│   singular, search, or custom add_feed slugs): merges               │
+│   Query::get_enabled_post_types() into the query                    │
 └─────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
@@ -86,7 +86,7 @@ prc-publication-listing/
 
 ### Main RSS / Atom feed
 
-The same post types that declare `prc-publication-listing` support are merged into the **main** feed query via `Query::include_in_main_feed()` (`pre_get_posts`, priority 11). Plugins do not need a separate feed filter—`add_post_type_support( 'my-type', 'prc-publication-listing' )` is enough for inclusion in publication listings and in the main feed.
+The same post types that declare `prc-publication-listing` support are merged into the **main** feed query at `/feed/` via `Query::include_in_main_feed()` (`pre_get_posts`, priority 11). Post-type, taxonomy, author, and custom `add_feed()` feeds are left untouched. Plugins do not need a separate feed filter—`add_post_type_support( 'my-type', 'prc-publication-listing' )` is enough for inclusion in publication listings and in the main feed.
 
 ## Requirements
 
