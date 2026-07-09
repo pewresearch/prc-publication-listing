@@ -300,6 +300,7 @@ class Query {
 		$taxonomies_to_exclude = $query->is_tax(
 			array(
 				'ngl_newsletter_cat',
+				'prc_newsletter_list',
 				'areas-of-expertise',
 				'decoded-category',
 			)

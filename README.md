@@ -486,8 +486,8 @@ npm run start -w @prc/publication-listing
 # Build for production
 npm run build -w @prc/publication-listing
 
-# Run tests (from monorepo root; wp-env, Playground, and Playwright are centralized)
-npm run env:start && npm test -- tests/prc-publication-listing/
+# Run tests (from monorepo root; VIP dev-env and Playwright are centralized)
+npm run vip:start && npm test -- tests/prc-publication-listing/
 
 # Lint PHP
 composer phpcs -- plugins/prc-publication-listing
