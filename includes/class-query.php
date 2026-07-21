@@ -169,9 +169,16 @@ class Query {
 		);
 
 		// On post type archives we want to respect the post type.
-		if ( is_post_type_archive() ) {
-			$post_type               = get_post_type();
-			$query_args['post_type'] = array( $post_type );
+		// Use the query's post_type — get_post_type() reads the global $post,
+		// which is often unset/stale during pre_get_posts and would clobber the archive scope.
+		if ( $query instanceof \WP_Query && $query->is_post_type_archive() ) {
+			$post_type = $query->get( 'post_type' );
+			if ( is_array( $post_type ) ) {
+				$post_type = reset( $post_type );
+			}
+			if ( is_string( $post_type ) && '' !== $post_type ) {
+				$query_args['post_type'] = array( $post_type );
+			}
 		}
 
 		return $query_args;
@@ -266,6 +273,73 @@ class Query {
 	}
 
 	/**
+	 * Ensure ElasticPress indexes the _post_visibility taxonomy.
+	 *
+	 * @hook ep_sync_taxonomies
+	 *
+	 * @param array $taxonomies Taxonomies ElasticPress will sync.
+	 * @return array
+	 */
+	public function ensure_post_visibility_synced( $taxonomies ) {
+		$taxonomy = get_taxonomy( '_post_visibility' );
+		if ( $taxonomy ) {
+			$taxonomies['_post_visibility'] = $taxonomy;
+		}
+		return $taxonomies;
+	}
+
+	/**
+	 * Enforce _post_visibility as an ES must_not filter on ep_integrate queries.
+	 *
+	 * Closes the gap where REST/feed search paths set ep_integrate without
+	 * running get_filtered_query_args(). SQL tax_query remains for MySQL fallback.
+	 *
+	 * @hook ep_post_formatted_args
+	 *
+	 * @param array    $formatted_args Formatted ES args.
+	 * @param array    $args           WP_Query args.
+	 * @param \WP_Query $wp_query       Query object.
+	 * @return array
+	 */
+	public function enforce_post_visibility_in_es( $formatted_args, $args, $wp_query ) {
+		if ( defined( 'PRC_PRIMARY_SITE_ID' ) && PRC_PRIMARY_SITE_ID !== get_current_blog_id() ) {
+			return $formatted_args;
+		}
+
+		$is_rest = defined( 'REST_REQUEST' ) && REST_REQUEST;
+		if ( is_admin() && ! $is_rest ) {
+			return $formatted_args;
+		}
+
+		$is_search = false;
+		if ( is_array( $args ) && ! empty( $args['s'] ) ) {
+			$is_search = true;
+		} elseif ( $wp_query instanceof \WP_Query && $wp_query->is_search() ) {
+			$is_search = true;
+		}
+
+		$visibility_term = $is_search ? 'hidden-on-search' : 'hidden-on-index';
+
+		if ( ! isset( $formatted_args['post_filter'] ) || ! is_array( $formatted_args['post_filter'] ) ) {
+			$formatted_args['post_filter'] = array();
+		}
+		if ( ! isset( $formatted_args['post_filter']['bool'] ) || ! is_array( $formatted_args['post_filter']['bool'] ) ) {
+			$formatted_args['post_filter']['bool'] = array();
+		}
+		if ( ! isset( $formatted_args['post_filter']['bool']['must_not'] ) || ! is_array( $formatted_args['post_filter']['bool']['must_not'] ) ) {
+			$formatted_args['post_filter']['bool']['must_not'] = array();
+		}
+
+		$formatted_args['post_filter']['bool']['must_not'][] = array(
+			'terms' => array(
+				'terms._post_visibility.slug' => array( $visibility_term ),
+			),
+		);
+
+		return $formatted_args;
+	}
+
+	/**
 	 * This filter will determine if we are in a "publication listing" context and if so, will set a flag, early on $query. This flag, `isPubListingQuery`, will be used later in other pre_get_posts filters to determine if we should be modifying the query.
 	 *
 	 * @hook pre_get_posts
@@ -299,7 +373,6 @@ class Query {
 		// Specific conditions that we do not want to modify the query and want to bail early.
 		$taxonomies_to_exclude = $query->is_tax(
 			array(
-				'ngl_newsletter_cat',
 				'prc_newsletter_list',
 				'areas-of-expertise',
 				'decoded-category',

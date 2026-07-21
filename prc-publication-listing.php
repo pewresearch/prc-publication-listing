@@ -35,34 +35,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! defined( 'PRC_PRIMARY_SITE_ID' ) ) {
 	define( 'PRC_PRIMARY_SITE_ID', 1 );
 }
-if ( ! defined( 'DEFAULT_TECHNICAL_CONTACT' ) ) {
-	define( 'DEFAULT_TECHNICAL_CONTACT', 'webdev@pewresearch.org' );
-}
-
 define( 'PRC_PUBLICATION_LISTING_FILE', __FILE__ );
 define( 'PRC_PUBLICATION_LISTING_DIR', __DIR__ );
 define( 'PRC_PUBLICATION_LISTING_VERSION', '1.1.0' );
-
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-plugin-activator.php
- */
-function activate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-plugin-activator.php';
-	Plugin_Activator::activate();
-}
-
-/**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-plugin-deactivator.php
- */
-function deactivate() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-plugin-deactivator.php';
-	Plugin_Deactivator::deactivate();
-}
-
-register_activation_hook( __FILE__, '\PRC\Platform\Publication_Listing\activate' );
-register_deactivation_hook( __FILE__, '\PRC\Platform\Publication_Listing\deactivate' );
 
 /**
  * Helper utilities

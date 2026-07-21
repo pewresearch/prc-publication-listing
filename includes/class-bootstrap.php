@@ -153,6 +153,8 @@ class Bootstrap {
 		$this->loader->add_action( 'pre_get_posts', $query, 'hook_pub_listing_args_into__wp_query', 11, 1 );
 		$this->loader->add_filter( 'pre_render_block', $query, 'hook_pub_listing_args_into__core_query', 11, 3 );
 		$this->loader->add_filter( 'rest_post_query', $query, 'hook_pub_listing_args_into__rest_query', 11, 2 );
+		$this->loader->add_filter( 'ep_post_formatted_args', $query, 'enforce_post_visibility_in_es', 20, 3 );
+		$this->loader->add_filter( 'ep_sync_taxonomies', $query, 'ensure_post_visibility_synced', 10, 1 );
 		$this->loader->add_action( 'enqueue_block_editor_assets', $this, 'enqueue_assets', 11, 1 );
 
 		$archive_redirects = new Archive_Redirects();

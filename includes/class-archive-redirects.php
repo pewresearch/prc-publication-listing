@@ -38,7 +38,7 @@ class Archive_Redirects {
 					$target_url = home_url( '/publications/' );
 				}
 
-				$target_url = add_query_arg( '_years', $year, $target_url );
+				$target_url = add_query_arg( 'ep_filter_years', $year, $target_url );
 
 				wp_redirect( $target_url, 301 );
 				exit;
