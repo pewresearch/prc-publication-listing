@@ -487,7 +487,7 @@ npm run start -w @prc/publication-listing
 npm run build -w @prc/publication-listing
 
 # Run tests (from monorepo root; VIP dev-env and Playwright are centralized)
-npm run vip:start && npm test -- tests/prc-publication-listing/
+npm run vip:start && npm test -- tests/prc-publication-listing/e2e/
 
 # Lint PHP
 composer phpcs -- plugins/prc-publication-listing

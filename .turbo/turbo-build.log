@@ -1,5 +1,5 @@
 
-> @prc/publication-listing@1.1.0 build
+> @prc/publication-listing@1.0.0 build
 > wp-scripts build
 
 assets by path post-visibility/ 2.3 KiB
@@ -16,4 +16,4 @@ orphan modules 1.67 KiB [orphan] 8 modules
 built modules 5.56 KiB [built]
   ./src/core-query/index.js + 2 modules 1.56 KiB [not cacheable] [built] [code generated]
   ./src/post-visibility/index.js + 6 modules 4 KiB [not cacheable] [built] [code generated]
-webpack 5.106.2 compiled successfully in 1013 ms
+webpack 5.106.2 compiled successfully in 1043 ms

@@ -1,6 +1,6 @@
 {
 	"name": "@prc/publication-listing",
-	"version": "1.1.0",
+	"version": "1.0.0",
 	"description": "Publication Listing query handler and post visibility controls for PRC Platform",
 	"license": "GPL-2.0-or-later",
 	"devDependencies": {
