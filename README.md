@@ -165,6 +165,29 @@ $query = new WP_Query( $args );
 
 ### Filters
 
+#### `prc_platform_pub_listing_default_visibility`
+
+Configure default `_post_visibility` terms by post type. Applied once on `wp_after_insert_post` (first insert only) when the post has no visibility terms yet, so editors can uncheck a default and stay opted into listings.
+
+```php
+/**
+ * @param array<string, string[]> $defaults Map of post_type => term slug[]
+ *                                          Supported slugs: hidden-on-index, hidden-on-search
+ * @return array<string, string[]>
+ */
+apply_filters( 'prc_platform_pub_listing_default_visibility', array $defaults ): array
+```
+
+**Use cases:**
+
+```php
+// Hide email campaigns from /publications by default
+add_filter( 'prc_platform_pub_listing_default_visibility', function( $defaults ) {
+    $defaults['prc_email_campaign'] = array( 'hidden-on-index' );
+    return $defaults;
+} );
+```
+
 #### `prc_platform_pub_listing_default_args`
 
 Modify the default publication listing query arguments after post type support and visibility rules are applied.
@@ -393,16 +416,19 @@ $args = Query::get_filtered_query_args( array(
 $query = new WP_Query( $args );
 ```
 
-### Hiding Posts Programmatically
+### Default Visibility by Post Type
+
+Prefer the `prc_platform_pub_listing_default_visibility` filter over one-off publish hooks. Publication listing applies configured defaults once when a post is first created:
 
 ```php
-// On publish, hide collection posts from index by default
-add_action( 'prc_platform_on_publish', function( $post ) {
-    if ( 'collection' === $post->post_type ) {
-        wp_set_object_terms( $post->ID, 'hidden-on-index', '_post_visibility' );
-    }
+add_filter( 'prc_platform_pub_listing_default_visibility', function( $defaults ) {
+    $defaults['collections']        = array( 'hidden-on-index' );
+    $defaults['prc_email_campaign'] = array( 'hidden-on-index' );
+    return $defaults;
 } );
 ```
+
+Editors can still uncheck **Hide on Publications Archive** in the post status panel; cleared terms are not re-applied on later saves.
 
 ## Best Practices
 

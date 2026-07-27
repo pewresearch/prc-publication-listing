@@ -143,6 +143,8 @@ class Bootstrap {
 
 		// Hook into various actions and filters.
 		$this->loader->add_action( 'init', $query, 'register_post_visibility_taxonomy', 10 );
+		// Apply on any first insert (auto-draft, draft, etc.) — not only post_init.
+		$this->loader->add_action( 'wp_after_insert_post', $query, 'apply_default_post_visibility_on_insert', 10, 3 );
 		$this->loader->add_action( 'pre_get_posts', $query, 'init_pub_listing__wp_query', 1, 1 );
 		$this->loader->add_filter( 'block_type_metadata_settings', $query, 'default_tax_query_to_or', 100, 2 );
 		$this->loader->add_filter( 'block_type_metadata_settings', $query, 'update_context', 100, 2 );

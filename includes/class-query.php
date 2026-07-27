@@ -196,6 +196,129 @@ class Query {
 	}
 
 	/**
+	 * Known `_post_visibility` term slugs that can be used as defaults.
+	 *
+	 * @return string[]
+	 */
+	public static function get_supported_visibility_slugs(): array {
+		return array( 'hidden-on-index', 'hidden-on-search' );
+	}
+
+	/**
+	 * Default `_post_visibility` term slugs keyed by post type.
+	 *
+	 * Only applied when a post currently has no `_post_visibility` terms
+	 * (so editors can clear defaults and stay opted into listings).
+	 *
+	 * @return array<string, string[]> Map of post_type => term slug[].
+	 */
+	public static function get_default_visibility(): array {
+		/**
+		 * Filter default `_post_visibility` term slugs by post type.
+		 *
+		 * Supported slugs: `hidden-on-index`, `hidden-on-search`.
+		 * Only post types with `prc-publication-listing` support are honored.
+		 *
+		 * @param array<string, string[]> $defaults Map of post_type => term slug[].
+		 */
+		$defaults = apply_filters( 'prc_platform_pub_listing_default_visibility', array() );
+		if ( ! is_array( $defaults ) ) {
+			return array();
+		}
+
+		$enabled_post_types = self::get_enabled_post_types();
+		$supported_slugs    = self::get_supported_visibility_slugs();
+		$sanitized          = array();
+
+		foreach ( $defaults as $post_type => $slugs ) {
+			if ( ! is_string( $post_type ) || '' === $post_type ) {
+				continue;
+			}
+			if ( ! in_array( $post_type, $enabled_post_types, true ) ) {
+				continue;
+			}
+			if ( ! is_array( $slugs ) ) {
+				continue;
+			}
+
+			$clean_slugs = array();
+			foreach ( $slugs as $slug ) {
+				if ( ! is_string( $slug ) ) {
+					continue;
+				}
+				if ( ! in_array( $slug, $supported_slugs, true ) ) {
+					continue;
+				}
+				$clean_slugs[] = $slug;
+			}
+
+			$clean_slugs = array_values( array_unique( $clean_slugs ) );
+			if ( ! empty( $clean_slugs ) ) {
+				$sanitized[ $post_type ] = $clean_slugs;
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Default `_post_visibility` term slugs for a single post type.
+	 *
+	 * @param string $post_type Post type slug.
+	 * @return string[]
+	 */
+	public static function get_default_visibility_for_post_type( string $post_type ): array {
+		$defaults = self::get_default_visibility();
+		return $defaults[ $post_type ] ?? array();
+	}
+
+	/**
+	 * Apply configured default `_post_visibility` terms on first post insert.
+	 *
+	 * Covers auto-draft editor creates and direct draft inserts (e.g. REST
+	 * `status: draft`) that never fire `prc_platform_on_post_init`.
+	 *
+	 * @hook wp_after_insert_post
+	 *
+	 * @param int          $post_id Post ID.
+	 * @param object|mixed $post    Post object.
+	 * @param bool         $update  Whether this is an existing post being updated.
+	 */
+	public function apply_default_post_visibility_on_insert( $post_id, $post = null, $update = false ): void {
+		if ( true === $update ) {
+			return;
+		}
+
+		$this->apply_default_post_visibility( $post );
+	}
+
+	/**
+	 * Apply configured default `_post_visibility` terms when a post is first created.
+	 *
+	 * Skips when the post already has visibility terms so editors can uncheck
+	 * a default and remain opted into publication listings.
+	 *
+	 * @param object|mixed $post Post object.
+	 */
+	public function apply_default_post_visibility( $post ): void {
+		if ( ! is_object( $post ) || empty( $post->post_type ) || empty( $post->ID ) ) {
+			return;
+		}
+
+		$defaults = self::get_default_visibility_for_post_type( (string) $post->post_type );
+		if ( empty( $defaults ) ) {
+			return;
+		}
+
+		$current = wp_get_object_terms( (int) $post->ID, '_post_visibility', array( 'fields' => 'ids' ) );
+		if ( ! empty( $current ) || is_wp_error( $current ) ) {
+			return;
+		}
+
+		wp_set_object_terms( (int) $post->ID, $defaults, '_post_visibility', false );
+	}
+
+	/**
 	 * Whether the query is the global site feed at /feed/ (not archive, singular, search, or custom add_feed slugs).
 	 *
 	 * @param \WP_Query $query The query object.
