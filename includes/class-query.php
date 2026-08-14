@@ -434,6 +434,11 @@ class Query {
 			return $formatted_args;
 		}
 
+		// List archives must show campaigns that stay hidden-on-index on /publications.
+		if ( $wp_query instanceof \WP_Query && $wp_query->is_tax( 'prc_newsletter_list' ) ) {
+			return $formatted_args;
+		}
+
 		$is_search = false;
 		if ( is_array( $args ) && ! empty( $args['s'] ) ) {
 			$is_search = true;

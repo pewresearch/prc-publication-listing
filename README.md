@@ -1,5 +1,7 @@
 # PRC Publication Listing
 
+> Canonical docs: [docs/plugins/prc-publication-listing/](../../docs/plugins/prc-publication-listing/)
+
 A WordPress plugin that provides the default query handler for publication listings and post visibility controls for PRC Platform.
 
 ## Overview
