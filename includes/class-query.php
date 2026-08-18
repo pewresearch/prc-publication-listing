@@ -121,11 +121,6 @@ class Query {
 		$query_args['post_type']           = array_values( array_unique( array_merge( $post_types, $supported_post_types ) ) );
 		$query_args['ignore_sticky_posts'] = true;
 
-		$post_visibility = array( 'hidden-on-index' );
-		if ( $is_searching ) {
-			$post_visibility = array( 'hidden-on-search' );
-		}
-
 		$existing_tax_query = $query_args['tax_query'] ?? array();
 		$has_visibility     = false;
 		foreach ( $existing_tax_query as $clause ) {
@@ -142,21 +137,24 @@ class Query {
 		}
 
 		if ( ! $has_visibility ) {
-			// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
-			$query_args['tax_query'] = array_merge(
-				$existing_tax_query,
-				array(
+			$post_visibility = self::get_visibility_terms( $query_args, $query );
+			if ( ! empty( $post_visibility ) ) {
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				$query_args['tax_query'] = array_merge(
+					$existing_tax_query,
 					array(
-						'relation' => 'OR',
 						array(
-							'taxonomy' => '_post_visibility',
-							'field'    => 'slug',
-							'terms'    => $post_visibility,
-							'operator' => 'NOT IN',
+							'relation' => 'OR',
+							array(
+								'taxonomy' => '_post_visibility',
+								'field'    => 'slug',
+								'terms'    => $post_visibility,
+								'operator' => 'NOT IN',
+							),
 						),
-					),
-				)
-			);
+					)
+				);
+			}
 		}
 
 		// Enforce only published posts, this also helps enhance query performance.
@@ -202,6 +200,52 @@ class Query {
 	 */
 	public static function get_supported_visibility_slugs(): array {
 		return array( 'hidden-on-index', 'hidden-on-search' );
+	}
+
+	/**
+	 * Visibility slugs to exclude from a listing query.
+	 *
+	 * An empty list means do not add a default `_post_visibility` exclusion.
+	 *
+	 * @param array $args  Query args.
+	 * @param mixed $query Query object or null.
+	 * @return string[]
+	 */
+	public static function get_visibility_terms( array $args, $query ): array {
+		$is_search = array_key_exists( 's', $args ) && ! empty( $args['s'] );
+		if ( ! $is_search && $query instanceof \WP_Query && $query->is_search() ) {
+			$is_search = true;
+		}
+
+		$terms = $is_search ? array( 'hidden-on-search' ) : array( 'hidden-on-index' );
+
+		/**
+		 * Filter the `_post_visibility` slugs a listing query excludes.
+		 *
+		 * Return an empty array to skip the default exclusion.
+		 *
+		 * @param string[] $terms Visibility slugs.
+		 * @param array    $args  Query args.
+		 * @param mixed    $query Query object or null.
+		 */
+		$terms = apply_filters( 'prc_platform_pub_listing_visibility_terms', $terms, $args, $query );
+		if ( ! is_array( $terms ) ) {
+			return array();
+		}
+
+		$supported = self::get_supported_visibility_slugs();
+		$clean     = array();
+		foreach ( $terms as $term ) {
+			if ( ! is_string( $term ) ) {
+				continue;
+			}
+			if ( ! in_array( $term, $supported, true ) ) {
+				continue;
+			}
+			$clean[] = $term;
+		}
+
+		return array_values( array_unique( $clean ) );
 	}
 
 	/**
@@ -439,14 +483,10 @@ class Query {
 			return $formatted_args;
 		}
 
-		$is_search = false;
-		if ( is_array( $args ) && ! empty( $args['s'] ) ) {
-			$is_search = true;
-		} elseif ( $wp_query instanceof \WP_Query && $wp_query->is_search() ) {
-			$is_search = true;
+		$visibility_terms = self::get_visibility_terms( is_array( $args ) ? $args : array(), $wp_query );
+		if ( empty( $visibility_terms ) ) {
+			return $formatted_args;
 		}
-
-		$visibility_term = $is_search ? 'hidden-on-search' : 'hidden-on-index';
 
 		if ( ! isset( $formatted_args['post_filter'] ) || ! is_array( $formatted_args['post_filter'] ) ) {
 			$formatted_args['post_filter'] = array();
@@ -460,7 +500,7 @@ class Query {
 
 		$formatted_args['post_filter']['bool']['must_not'][] = array(
 			'terms' => array(
-				'terms._post_visibility.slug' => array( $visibility_term ),
+				'terms._post_visibility.slug' => $visibility_terms,
 			),
 		);
 

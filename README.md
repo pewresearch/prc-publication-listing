@@ -190,6 +190,14 @@ add_filter( 'prc_platform_pub_listing_default_visibility', function( $defaults )
 } );
 ```
 
+#### `prc_platform_pub_listing_visibility_terms`
+
+Replace the default `_post_visibility` slugs a listing excludes. Return an empty list to skip the default exclusion. Collection landing pages use this so member posts hidden from `/publications` still appear on the collection page.
+
+```php
+apply_filters( 'prc_platform_pub_listing_visibility_terms', array $terms, array $args, $query ): array
+```
+
 #### `prc_platform_pub_listing_default_args`
 
 Modify the default publication listing query arguments after post type support and visibility rules are applied.
@@ -317,7 +325,7 @@ A private taxonomy for controlling post visibility in listings.
 
 | Term             | Slug               | Effect                                               |
 | ---------------- | ------------------ | ---------------------------------------------------- |
-| Hidden on Index  | `hidden-on-index`  | Post excluded from `/publications` and archive pages |
+| Hidden on Index  | `hidden-on-index`  | Post excluded from `/publications` and archive pages. Singular collection landing-page listings skip this exclusion. |
 | Hidden on Search | `hidden-on-search` | Post excluded from internal search results           |
 
 ### Block Editor UI
