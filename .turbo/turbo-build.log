@@ -16,4 +16,4 @@ orphan modules 1.67 KiB [1m[33m[orphan][39m[22m 8 modules
 built modules 5.56 KiB [1m[33m[built][39m[22m
   [1m./src/core-query/index.js + 2 modules[39m[22m 1.56 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/post-visibility/index.js + 6 modules[39m[22m 4 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 2393 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 2215 ms
