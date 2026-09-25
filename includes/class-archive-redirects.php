@@ -7,7 +7,7 @@
 
 namespace PRC\Platform\Publication_Listing;
 
-use function PRC\TDS\get_relationship;
+use function PRC\Primitives\TDS\get_relationship;
 
 /**
  * Handles year-archive redirects to publication listing URLs.
