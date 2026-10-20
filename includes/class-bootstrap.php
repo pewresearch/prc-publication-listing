@@ -112,7 +112,7 @@ class Bootstrap {
 	public function enqueue_assets() {
 		$this->register_assets();
 		wp_enqueue_script( 'prc-platform-publication-listing__core-query' );
-		if ( in_array( get_post_type(), Query::get_enabled_post_types(), true ) ) {
+		if ( in_array( get_post_type(), Query::get_visibility_enabled_post_types(), true ) ) {
 			wp_enqueue_script( 'prc-platform-publication-listing__post-visibility' );
 		}
 	}

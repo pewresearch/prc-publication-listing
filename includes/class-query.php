@@ -22,6 +22,11 @@ use WP_Error;
  */
 class Query {
 	/**
+	 * Post type support flag for post visibility without publication listing membership.
+	 */
+	public const POST_VISIBILITY_SUPPORT = 'prc-post-visibility';
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -194,6 +199,25 @@ class Query {
 	}
 
 	/**
+	 * Get post types that use the `_post_visibility` taxonomy.
+	 *
+	 * Returns all post types that have declared support for 'prc-publication-listing'
+	 * or 'prc-post-visibility'.
+	 *
+	 * @return array
+	 */
+	public static function get_visibility_enabled_post_types(): array {
+		return array_values(
+			array_unique(
+				array_merge(
+					self::get_enabled_post_types(),
+					get_post_types_by_support( self::POST_VISIBILITY_SUPPORT )
+				)
+			)
+		);
+	}
+
+	/**
 	 * Known `_post_visibility` term slugs that can be used as defaults.
 	 *
 	 * @return string[]
@@ -261,7 +285,7 @@ class Query {
 		 * Filter default `_post_visibility` term slugs by post type.
 		 *
 		 * Supported slugs: `hidden-on-index`, `hidden-on-search`.
-		 * Only post types with `prc-publication-listing` support are honored.
+		 * Only post types with `prc-publication-listing` or `prc-post-visibility` support are honored.
 		 *
 		 * @param array<string, string[]> $defaults Map of post_type => term slug[].
 		 */
@@ -270,15 +294,15 @@ class Query {
 			return array();
 		}
 
-		$enabled_post_types = self::get_enabled_post_types();
-		$supported_slugs    = self::get_supported_visibility_slugs();
-		$sanitized          = array();
+		$visibility_post_types = self::get_visibility_enabled_post_types();
+		$supported_slugs       = self::get_supported_visibility_slugs();
+		$sanitized             = array();
 
 		foreach ( $defaults as $post_type => $slugs ) {
 			if ( ! is_string( $post_type ) || '' === $post_type ) {
 				continue;
 			}
-			if ( ! in_array( $post_type, $enabled_post_types, true ) ) {
+			if ( ! in_array( $post_type, $visibility_post_types, true ) ) {
 				continue;
 			}
 			if ( ! is_array( $slugs ) ) {
@@ -424,7 +448,7 @@ class Query {
 	public function register_post_visibility_taxonomy() {
 		register_taxonomy(
 			'_post_visibility',
-			self::get_enabled_post_types(),
+			self::get_visibility_enabled_post_types(),
 			array(
 				'public'             => true,
 				'publicly_queryable' => true,
@@ -463,8 +487,8 @@ class Query {
 	 *
 	 * @hook ep_post_formatted_args
 	 *
-	 * @param array    $formatted_args Formatted ES args.
-	 * @param array    $args           WP_Query args.
+	 * @param array     $formatted_args Formatted ES args.
+	 * @param array     $args           WP_Query args.
 	 * @param \WP_Query $wp_query       Query object.
 	 * @return array
 	 */

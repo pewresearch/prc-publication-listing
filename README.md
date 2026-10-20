@@ -169,7 +169,7 @@ $query = new WP_Query( $args );
 
 #### `prc_platform_pub_listing_default_visibility`
 
-Configure default `_post_visibility` terms by post type. Applied once on `wp_after_insert_post` (first insert only) when the post has no visibility terms yet, so editors can uncheck a default and stay opted into listings.
+Configure default `_post_visibility` terms by post type. Applied once on `wp_after_insert_post` (first insert only) when the post has no visibility terms yet, so editors can uncheck a default and stay opted into listings. Only post types with `prc-publication-listing` or `prc-post-visibility` support are honored.
 
 ```php
 /**
@@ -289,6 +289,16 @@ Post types with `prc-publication-listing` support automatically:
 2. Have access to the `_post_visibility` taxonomy
 3. Show the post visibility toggle panel in the block editor
 
+#### Visibility without listing: `prc-post-visibility`
+
+Post types with `prc-post-visibility` support get items 2 and 3 above, plus configurable defaults. They are not merged into publication listing queries or the main feed. Use it for post types with their own archive that still run `Query::get_filtered_query_args()`, such as `dataset`.
+
+```php
+add_post_type_support( 'dataset', 'prc-post-visibility' );
+```
+
+`Query::get_visibility_enabled_post_types()` returns the union of both support flags. `Query::get_enabled_post_types()` still returns only listing post types.
+
 ### Query Variables
 
 #### `showChildPosts`
@@ -321,16 +331,16 @@ wp.apiFetch({
 
 ### Taxonomy: `_post_visibility`
 
-A private taxonomy for controlling post visibility in listings.
+A private taxonomy for controlling post visibility in listings. It is registered for post types with `prc-publication-listing` or `prc-post-visibility` support.
 
-| Term             | Slug               | Effect                                               |
-| ---------------- | ------------------ | ---------------------------------------------------- |
+| Term             | Slug               | Effect                                                                                                               |
+| ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | Hidden on Index  | `hidden-on-index`  | Post excluded from `/publications` and archive pages. Singular collection landing-page listings skip this exclusion. |
-| Hidden on Search | `hidden-on-search` | Post excluded from internal search results           |
+| Hidden on Search | `hidden-on-search` | Post excluded from internal search results                                                                           |
 
 ### Block Editor UI
 
-Posts with publication listing support show visibility toggles in the post status panel:
+Posts with `prc-publication-listing` or `prc-post-visibility` support show visibility toggles in the post status panel:
 
 - **Hide on Publications Archive**: Toggles `hidden-on-index` term
 - **Hide on Internal Search**: Toggles `hidden-on-search` term
@@ -484,7 +494,7 @@ add_action( 'init', function() {
 
 **Cause:** Post type doesn't have publication listing support.
 
-**Solution:** Add support as shown above.
+**Solution:** Add support as shown above. To get the toggles without joining publication listings, add `prc-post-visibility` support instead.
 
 ### Child Posts Not Showing
 
