@@ -1,8 +1,8 @@
 
-> @prc/publication-listing@1.1.2 build
+> @prc/publication-listing@1.1.3 build
 > wp-scripts build
 
-Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
 assets by path [1m[32mpost-visibility/[39m[22m 2.3 KiB
@@ -19,4 +19,4 @@ orphan modules 1.67 KiB [1m[33m[orphan][39m[22m 8 modules
 built modules 5.56 KiB [1m[33m[built][39m[22m
   [1m./src/core-query/index.js + 2 modules[39m[22m 1.56 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/post-visibility/index.js + 6 modules[39m[22m 4 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3159 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3233 ms
